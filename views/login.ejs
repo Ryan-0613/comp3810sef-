@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>StudyManager - Login</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,7 +15,6 @@
             background-attachment: fixed;
             background-color: rgba(0,0,0,0.4);
             background-blend-mode: darken;
-
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,6 +27,14 @@
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             width: 360px;
+        }
+        .website-name {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
         }
         h1 {
             text-align: center;
@@ -77,6 +84,7 @@
 </head>
 <body>
     <div class="login-card">
+        <div class="website-name">StudyMate</div>
         <h1>Login</h1>
         <form action="/login" method="POST">
             <div class="item">
@@ -90,7 +98,7 @@
             <button type="submit">Login</button>
         </form>
         <div class="link-text">
-            Don't have an account? <a href="/register">Sign Up</a>
+            no account? <a href="/register">Go to register</a>
         </div>
     </div>
 </body>
