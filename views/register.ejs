@@ -1,7 +1,92 @@
-<h1>Register</h1>
-<form method="POST" action="/register">
-  <div>account：<input type="text" name="username" required></div>
-  <div>password：<input type="password" name="password" required></div>
-  <button type="submit">Register</button>
-</form>
-<p>have account？<a href="/login">go login</a></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+            margin: 0;
+        }
+        .login-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 360px;
+        }
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-top: 0;
+        }
+        .item {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #4a5568;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 11px;
+            background-color: #38a169;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2f855a;
+        }
+        .link-text {
+            text-align: center;
+            margin-top: 20px;
+        }
+        a {
+            color: #3182ce;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>Register</h1>
+        <form action="/register" method="POST">
+            <div class="item">
+                <label>account:</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="item">
+                <label>password:</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div class="link-text">
+            have account? <a href="/login">Go to login</a>
+        </div>
+    </div>
+</body>
+</html>
+
