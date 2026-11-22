@@ -15,15 +15,16 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// app.use(passport.initialize());
-// app.use(passport.session());
-/*
+app.use(passport.initialize());
+app.use(passport.session());
+
 const facebookAuth = {
-      'clientID'        : '', 
-      'clientSecret'    : '', 
-      'callbackURL'     : ''
+      'clientID'        : '1171738229131964', 
+      'clientSecret'    : '493230679533b68571c8dbf83007a339', 
+      'callbackURL'     : 'http://localhost:3000/auth/facebook/callback'
 };
-*/
+
+
 const mongourl = 'mongodb+srv://G56:aFu3BknvxYR8P1Kf@cluster0.cc1haok.mongodb.net/';
 const client = new MongoClient(mongourl, {
   serverApi: {
@@ -41,7 +42,7 @@ async function connectDB() {
 }
 connectDB().catch(err => console.log("DB connect error:", err));
 
-/*
+
 passport.serializeUser(function (user, done) {
   done(null, user);
 });
@@ -54,13 +55,13 @@ passport.use(new FacebookStrategy(facebookAuth,
     console.log("Facebook data：", profile);
     const fbUser = {
       id: profile.id,
-      name: profile.displayName,
+      username: profile.displayName, 
       type: "facebook"
     };
     return done(null, fbUser);
   }
 ));
-*/
+
 
 function isLoggedIn(req, res, next) {
   if (req.session && req.session.user) {
@@ -77,17 +78,24 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
-/*
-app.get("/auth/facebook", passport.authenticate("facebook", { scope : "email" }));
-app.get("/auth/facebook/callback",
-  passport.authenticate("facebook", {
-    successRedirect : "/home",
-    failureRedirect : "/login"
-  })
-);
-*/
 
-app.get('/logout', (req, res) => {
+app.get("/auth/facebook", passport.authenticate("facebook", { scope : ["email"] }));
+
+
+app.get("/auth/facebook/callback",
+  passport.authenticate("facebook", { failureRedirect : "/login" }),
+  (req, res) => {
+    req.session.user = req.user; 
+    res.redirect('/study');
+  }
+);
+
+
+app.get('/study', isLoggedIn, (req, res) => {
+  res.render('study', { username: req.session.user.username });
+});
+
+app.post('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/login');
 });
@@ -95,33 +103,18 @@ app.get('/logout', (req, res) => {
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   console.log("Received registration materials：", username, password);
-  /*
-  const User = require('./models/user');
-  const newUser = new User({username, password});
-  await newUser.save();
-  */
   res.redirect('/login');
 });
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   console.log("Received login information：", username, password);
-  /*
-  const User = require('./models/user');
-  const foundUser = await User.findOne({username: username});
-  if(foundUser && foundUser.password === password){
-    req.session.user = foundUser;
-    res.redirect('/home');
-  }else{
-    res.send("Incorrect account password");
-  }
-  */
   req.session.user = {username: username};
-  res.redirect('/home');
+  res.redirect('/study');
 });
 
 app.get('/home', isLoggedIn, (req, res) => {
-  res.send(`welcome ${req.session.user.username}！<br><a href="/logout">logout</a>`);
+  res.send(`welcome ${req.session.user.username}！<br><a href="/study">進入學習管理</a> <br><form action="/logout" method="POST"><button>logout</button></form>`);
 });
 
 app.listen(port, () => {
