@@ -16,6 +16,7 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+/*
 const facebookAuth = {
       'clientID'        : '', 
       'clientSecret'    : '', 
@@ -43,9 +44,9 @@ passport.use(new FacebookStrategy(facebookAuth,
     return done(null, fbUser);
   }
 ));
-
+*/
 function isLoggedIn(req, res, next) {
-  if (req.session?.user || req.isAuthenticated()) {
+  if ((req.session && req.session.user) || req.isAuthenticated()) {
     return next();
   }
   res.redirect('/login');
