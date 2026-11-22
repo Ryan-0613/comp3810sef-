@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const FacebookStrategy = require('passport-facebook').Strategy;
+const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = 3000;
 
@@ -14,18 +15,33 @@ app.use(session({
   saveUninitialized: false
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 /*
 const facebookAuth = {
       'clientID'        : '', 
       'clientSecret'    : '', 
       'callbackURL'     : ''
 };
-const mongourl = ''
-const dbName = '';
-const collectionName = "studyRecords";
+*/
+const mongourl = 'mongodb+srv://G56:aFu3BknvxYR8P1Kf@cluster0.cc1haok.mongodb.net/';
+const client = new MongoClient(mongourl, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+const dbName = 'project_G56';
+const collectionName = "course";
 
+async function connectDB() {
+  await client.connect();
+  console.log("MongoDB connected");
+}
+connectDB().catch(err => console.log("DB connect error:", err));
+
+/*
 passport.serializeUser(function (user, done) {
   done(null, user);
 });
@@ -45,8 +61,9 @@ passport.use(new FacebookStrategy(facebookAuth,
   }
 ));
 */
+
 function isLoggedIn(req, res, next) {
-  if ((req.session && req.session.user) || req.isAuthenticated()) {
+  if (req.session && req.session.user) {
     return next();
   }
   res.redirect('/login');
@@ -60,7 +77,7 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
-
+/*
 app.get("/auth/facebook", passport.authenticate("facebook", { scope : "email" }));
 app.get("/auth/facebook/callback",
   passport.authenticate("facebook", {
@@ -68,12 +85,11 @@ app.get("/auth/facebook/callback",
     failureRedirect : "/login"
   })
 );
+*/
 
 app.get('/logout', (req, res) => {
-  req.logout(function(err) {
-    req.session.destroy();
-    res.redirect('/login');
-  });
+  req.session.destroy();
+  res.redirect('/login');
 });
 
 app.post('/register', async (req, res) => {
@@ -105,15 +121,10 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/home', isLoggedIn, (req, res) => {
-  if(req.session.user){
-    res.send(`welcome ${req.session.user.username}！<br><a href="/logout">logout</a>`);
-  }else{
-    res.send(`welcome Facebook user ${req.user.name}！<br><a href="/logout">logout</a>`);
-  }
+  res.send(`welcome ${req.session.user.username}！<br><a href="/logout">logout</a>`);
 });
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
-
 
