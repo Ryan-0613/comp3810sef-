@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <title>StudyManager - Sign Up</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,85 +15,54 @@
             background-attachment: fixed;
             background-color: rgba(0,0,0,0.4);
             background-blend-mode: darken;
-
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 90vh;
-            margin: 0;
+            height: 98vh;
+            margin:0;
         }
-        .login-card {
-            background: rgba(255,255,255,0.92);
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            width: 360px;
+        .box{
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            width:350px;
         }
-        h1 {
-            text-align: center;
-            color: #2d3748;
-            margin-top: 0;
-        }
-        .item {
-            margin-bottom: 16px;
-        }
-        label {
-            display: block;
-            margin-bottom: 6px;
-            color: #4a5568;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 11px;
-            background-color: #38a169;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #2f855a;
-        }
-        .link-text {
-            text-align: center;
-            margin-top: 20px;
-        }
-        a {
-            color: #3182ce;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
+        .error{
+            color:red;
         }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h1>Register</h1>
-        <form action="/register" method="POST">
-            <div class="item">
-                <label>account:</label>
-                <input type="text" name="username" required>
+    <div class="box">
+        <h1>SStudyManager - Sign Up</h1>
+        <% if (err) { %>
+            <p class="error"><%= err %></p>
+        <% } %>
+        <form method="POST" action="/register">
+            <div>
+                <label>Account (3–16 characters, letters, numbers, underscores _)</label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    required
+                    pattern="[a-zA-Z0-9_]{3,16}"
+                    title="The account name must be 3–16 characters long and can only use letters, numbers, and underscores_."
+                >
             </div>
-            <div class="item">
-                <label>password:</label>
-                <input type="password" name="password" required>
+            <div style="margin-top:10px;">
+                <label>Password (Must be 8 characters or more, including uppercase, lowercase, and numbers)</label>
+                <input 
+                    type="password" 
+                    name="password" 
+                    required
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+                    title="The password must be 8 characters or more, including uppercase, lowercase, and numbers"
+                >
             </div>
-            <button type="submit">Register</button>
+            <button type="submit" style="margin-top:15px;width:100%;padding:8px;">Sign Up</button>
         </form>
-        <div class="link-text">
-            have account? <a href="/login">Go to login</a>
-        </div>
+        <p>Already have an account?<a href="/login">Sign In</a></p>
     </div>
 </body>
 </html>
-
 
