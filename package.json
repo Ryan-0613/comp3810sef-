@@ -1,24 +1,21 @@
 {
-  "name": "comp3810sef-",
+  "name": "g56",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "dotenv": "^18.0.10",
     "ejs": "^7.0.2",
-    "express": "^4.22.3",
+    "express": "^5.3.0",
+    "express-formidable": "^1.2.0",
     "express-session": "^1.19.0",
-    "mongodb": "^4.17.2",
-    "mongoose": "^9.12.2",
+    "mongodb": "^6.22.0",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0"
-  },
-  "description": ""
+  }
 }

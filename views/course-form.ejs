@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= course && course._id ? 'Edit course' : 'Add course' %> - Revision Tracker</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <nav>
+    <a href="/courses">Revision Tracker</a>
+    <span>Hello, <%= user.name %></span>
+    <form action="/logout" method="POST" style="display:inline">
+      <button type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+<main>
+  <div class="form-card">
+    <h2><%= course && course._id ? 'Edit course' : 'Add course' %></h2>
+
+    <% if (error) { %>
+      <p class="error"><%= error %></p>
+    <% } %>
+
+    <form action="<%= course && course._id ? '/courses/' + course._id + '/update' : '/courses' %>" method="POST">
+      <label>Course code
+        <input type="text" name="code" value="<%= course ? course.code : '' %>" required>
+      </label>
+      <label>Course name
+        <input type="text" name="name" value="<%= course ? course.name : '' %>" required>
+      </label>
+      <label>Academic year
+        <input type="text" name="academicYear" placeholder="2026-2027" value="<%= course ? course.academicYear : '' %>" required>
+      </label>
+      <label>Semester
+        <select name="semester">
+          <% ['1', '2', 'Summer'].forEach(function (s) { %>
+            <option value="<%= s %>" <%= course && course.semester === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Type
+        <select name="category">
+          <% ['Major', 'Minor'].forEach(function (c) { %>
+            <option value="<%= c %>" <%= course && course.category === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit">Save</button>
+      <a href="/courses">Cancel</a>
+    </form>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Courses - Revision Tracker</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <nav>
+    <a href="/courses">Revision Tracker</a>
+    <span>Hello, <%= user.name %></span>
+    <form action="/logout" method="POST" style="display:inline">
+      <button type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+<main>
+  <h2>My Courses</h2>
+
+  <form action="/courses" method="GET" class="filters">
+    <label>Academic year
+      <select name="academicYear">
+        <option value="">All</option>
+        <% years.forEach(function (y) { %>
+          <option value="<%= y %>" <%= filters.academicYear === y ? 'selected' : '' %>><%= y %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>Semester
+      <select name="semester">
+        <option value="">All</option>
+        <option value="1" <%= filters.semester === '1' ? 'selected' : '' %>>1</option>
+        <option value="2" <%= filters.semester === '2' ? 'selected' : '' %>>2</option>
+        <option value="Summer" <%= filters.semester === 'Summer' ? 'selected' : '' %>>Summer</option>
+      </select>
+    </label>
+    <label>Type
+      <select name="category">
+        <option value="">All</option>
+        <option value="Major" <%= filters.category === 'Major' ? 'selected' : '' %>>Major</option>
+        <option value="Minor" <%= filters.category === 'Minor' ? 'selected' : '' %>>Minor</option>
+      </select>
+    </label>
+    <button type="submit">Filter</button>
+    <a href="/courses">Reset</a>
+  </form>
+
+  <p><a class="btn" href="/courses/new">+ Add course</a></p>
+
+  <% if (courses.length === 0) { %>
+    <p>No courses found.</p>
+  <% } %>
+
+  <div class="grid">
+    <% courses.forEach(function (row) { %>
+      <div class="card">
+        <h3><a href="/courses/<%= row.course._id %>"><%= row.course.code %> - <%= row.course.name %></a></h3>
+        <p><%= row.course.academicYear %> | Semester <%= row.course.semester %> | <%= row.course.category %></p>
+        <p>Overall familiarity: <%= row.stats.avgFamiliarity %> / 5</p>
+        <p>Revised: <%= row.stats.revisedCount %> / <%= row.stats.total %> (<%= row.stats.progress %>%)</p>
+        <progress value="<%= row.stats.progress %>" max="100"></progress>
+        <p>
+          <a href="/courses/<%= row.course._id %>/edit">Edit</a>
+        </p>
+        <form action="/courses/<%= row.course._id %>/delete" method="POST"
+              onsubmit="return confirm('Delete this course and all its lectures and tutorials?');">
+          <button type="submit">Delete</button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= course.code %> - Revision Tracker</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <nav>
+    <a href="/courses">Revision Tracker</a>
+    <span>Hello, <%= user.name %></span>
+    <form action="/logout" method="POST" style="display:inline">
+      <button type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+<main>
+  <p><a href="/courses">&larr; Back to courses</a></p>
+  <h2><%= course.code %> - <%= course.name %></h2>
+  <p><%= course.academicYear %> | Semester <%= course.semester %> | <%= course.category %></p>
+  <p>Overall familiarity: <%= stats.avgFamiliarity %> / 5</p>
+  <p>Revised: <%= stats.revisedCount %> / <%= stats.total %> (<%= stats.progress %>%)</p>
+  <progress value="<%= stats.progress %>" max="100"></progress>
+  <p><a href="/courses/<%= course._id %>/edit">Edit course</a></p>
+
+  <div class="form-card">
+    <h3>Add lecture / tutorial</h3>
+    <form action="/courses/<%= course._id %>/items" method="POST">
+      <label>Type
+        <select name="kind">
+          <option value="Lecture">Lecture</option>
+          <option value="Tutorial">Tutorial</option>
+        </select>
+      </label>
+      <label>Title
+        <input type="text" name="title" required>
+      </label>
+      <label>Familiarity (0-5)
+        <input type="number" name="familiarity" min="0" max="5" value="0">
+      </label>
+      <label>Recording URL
+        <input type="url" name="recordingUrl" placeholder="https://">
+      </label>
+      <label>Notes
+        <textarea name="notes" rows="3"></textarea>
+      </label>
+      <label>
+        <input type="checkbox" name="revised"> Revised
+      </label>
+      <button type="submit">Add</button>
+    </form>
+  </div>
+
+  <% [['Lectures', lectures], ['Tutorials', tutorials]].forEach(function (group) { %>
+    <h3><%= group[0] %></h3>
+    <% if (group[1].length === 0) { %>
+      <p>None yet.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Familiarity</th>
+            <th>Revised</th>
+            <th>Recording</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% group[1].forEach(function (item) { %>
+            <tr>
+              <td><%= item.title %></td>
+              <td><%= item.familiarity %> / 5</td>
+              <td><%= item.revised ? 'Yes' : 'No' %></td>
+              <td>
+                <% if (item.recordingUrl) { %>
+                  <a href="<%= item.recordingUrl %>" target="_blank" rel="noopener">Open</a>
+                <% } else { %>
+                  -
+                <% } %>
+              </td>
+              <td><%= item.notes %></td>
+              <td>
+                <a href="/courses/<%= course._id %>/items/<%= item._id %>/edit">Edit</a>
+                <form action="/courses/<%= course._id %>/items/<%= item._id %>/delete" method="POST"
+                      style="display:inline" onsubmit="return confirm('Delete this item?');">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  <% }) %>
+</main>
+</body>
+</html>

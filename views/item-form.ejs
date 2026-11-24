@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit <%= item.kind %> - Revision Tracker</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <nav>
+    <a href="/courses">Revision Tracker</a>
+    <span>Hello, <%= user.name %></span>
+    <form action="/logout" method="POST" style="display:inline">
+      <button type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+<main>
+  <div class="form-card">
+    <h2>Edit <%= item.kind %> - <%= course.code %></h2>
+
+    <form action="/courses/<%= course._id %>/items/<%= item._id %>/update" method="POST">
+      <label>Type
+        <select name="kind">
+          <option value="Lecture" <%= item.kind === 'Lecture' ? 'selected' : '' %>>Lecture</option>
+          <option value="Tutorial" <%= item.kind === 'Tutorial' ? 'selected' : '' %>>Tutorial</option>
+        </select>
+      </label>
+      <label>Title
+        <input type="text" name="title" value="<%= item.title %>" required>
+      </label>
+      <label>Familiarity (0-5)
+        <input type="number" name="familiarity" min="0" max="5" value="<%= item.familiarity %>">
+      </label>
+      <label>Recording URL
+        <input type="url" name="recordingUrl" value="<%= item.recordingUrl %>">
+      </label>
+      <label>Notes
+        <textarea name="notes" rows="4"><%= item.notes %></textarea>
+      </label>
+      <label>
+        <input type="checkbox" name="revised" <%= item.revised ? 'checked' : '' %>> Revised
+      </label>
+      <button type="submit">Save</button>
+      <a href="/courses/<%= course._id %>">Cancel</a>
+    </form>
+  </div>
+</main>
+</body>
+</html>
