@@ -1,9 +1,9 @@
 //Project topic：StudyManager — Learning Record Management System
-//Group member:              Work role of each member:
-// 1. Ye Sai Huen    14475760   Database + Schema / Model
-// 2. Chan Ming Ho   14491434   Login, Registration, Session, Facebook OAuth
-// 3. CRUD web UI
-// 4. Cheung Hin Yat 14491970   RESTful API
+//Group member:               Work role of each member:
+// 1. Ye Sai Huen     14475760   Database + Schema / Model
+// 2. Chan Ming Ho    14491434   Login, Registration, Session, Facebook OAuth
+// 3. Sze To Siu Lung 14484639   CRUD web UI
+// 4. Cheung Hin Yat  14491970   RESTful API
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
