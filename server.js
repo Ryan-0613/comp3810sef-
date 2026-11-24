@@ -221,10 +221,6 @@ app.post('/courses/:id/delete', isLoggedIn, (req, res) => {
 app.get('/course', (req, res) => {
     res.redirect('course-form');
 });
-
-app.get('/', (req, res) => {
-    res.redirect('item-form');
-});
 app.get('/register', (req, res) => {
     res.render('register');
 });
@@ -464,6 +460,138 @@ app.post('/login', async (req, res) => {
 
 app.get('/home', isLoggedIn, (req, res) => {
     res.send(`welcome ${req.session.user.username}！<br><a href="/index">Enter learning management</a> <br><form action="/logout" method="POST"><button>logout</button></form>`);
+});
+app.use(express.json());
+const recordCollectionName = "study_records";
+
+const insertDocument = async (db, doc) => {
+  var collection = db.collection(recordCollectionName);
+  let results = await collection.insertOne(doc);
+  console.log("insert one document:" + JSON.stringify(results));
+  return results;
+};
+
+const findDocument = async (db, criteria) => {
+  var collection = db.collection(recordCollectionName);
+  let results = await collection.find(criteria).toArray();
+  console.log("find the documents:" + JSON.stringify(results));
+  return results;
+};
+
+const updateDocument = async (db, criteria, updateData) => {
+  var collection = db.collection(recordCollectionName);
+  let results = await collection.updateOne(criteria, { $set: updateData });
+  console.log("update one document:" + JSON.stringify(results));
+  return results;
+};
+
+const deleteDocument = async (db, criteria) => {
+  var collection = db.collection(recordCollectionName);
+  let results = await collection.deleteMany(criteria);
+  console.log("delete the documents:" + JSON.stringify(results));
+  return results;
+};
+
+/* CREATE - add a new study record
+curl -i -X POST http://localhost:3000/api/records \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "title=Learn Node.js&subject=Web Development&duration=120&date=2026-11-19&status=Completed"
+*/
+app.post('/api/records', async (req, res) => {
+  try {
+    const db = client.db(dbName);
+    let newDoc = {
+      title: req.body.title,
+      subject: req.body.subject,
+      duration: Number(req.body.duration),
+      date: req.body.date,
+      status: req.body.status
+    };
+    const results = await insertDocument(db, newDoc);
+    res.status(201).json({ message: "Record created successfully", id: results.insertedId, data: newDoc });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* READ, get all study records
+curl -i http://localhost:3000/api/records
+*/
+app.get('/api/records', async (req, res) => {
+  try {
+    const db = client.db(dbName);
+    const docs = await findDocument(db, {});
+    res.status(200).json(docs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* READ, get one record by ID
+curl -i http://localhost:3000/api/records/<ID>
+*/
+app.get('/api/records/:id', async (req, res) => {
+  try {
+    const db = client.db(dbName);
+    let criteria = { _id: ObjectId.createFromHexString(req.params.id) };
+    const docs = await findDocument(db, criteria);
+    if (docs.length > 0) {
+      res.status(200).json(docs[0]);
+    } else {
+      res.status(404).json({ message: "Record not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Invalid ID format" });
+  }
+});
+
+/* UPDATE, update a record
+curl -i -X PUT http://localhost:3000/api/records/<ID> \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "title=Learn Node.js&duration=150&status=In Progress"
+*/
+app.put('/api/records/:id', async (req, res) => {
+  try {
+    const db = client.db(dbName);
+    let criteria = { _id: ObjectId.createFromHexString(req.params.id) };
+
+    let updateData = {};
+    if (req.body.title !== undefined) updateData.title = req.body.title;
+    if (req.body.subject !== undefined) updateData.subject = req.body.subject;
+    if (req.body.duration !== undefined) updateData.duration = Number(req.body.duration);
+    if (req.body.date !== undefined) updateData.date = req.body.date;
+    if (req.body.status !== undefined) updateData.status = req.body.status;
+
+    const results = await updateDocument(db, criteria, updateData);
+
+    if (results.matchedCount > 0) {
+      res.status(200).json({ message: "Record updated successfully", modified: results.modifiedCount });
+    } else {
+      res.status(404).json({ message: "Record not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* DELETE, delete a record
+curl -i -X DELETE http://localhost:3000/api/records/<ID>
+*/
+app.delete('/api/records/:id', async (req, res) => {
+  try {
+    const db = client.db(dbName);
+    let criteria = { _id: ObjectId.createFromHexString(req.params.id) };
+
+    const results = await deleteDocument(db, criteria);
+
+    if (results.deletedCount > 0) {
+      res.status(200).json({ message: "Record deleted successfully", deleted: results.deletedCount });
+    } else {
+      res.status(404).json({ message: "Record not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(port, () => {
