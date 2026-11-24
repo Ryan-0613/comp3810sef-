@@ -105,6 +105,9 @@
     <div class="login-card">
         <div class="website-name">StudyManager</div>
         <h1>Login</h1>
+        <% if (typeof err !== 'undefined' && err) { %>
+            <p style="color: #e53e3e; text-align: center; font-weight: bold;"><%= err %></p>
+        <% } %>
         <form action="/login" method="POST">
             <div class="item">
                 <label>account:</label>
@@ -125,6 +128,7 @@
     </div>
 </body>
 </html>
+
 
 
 

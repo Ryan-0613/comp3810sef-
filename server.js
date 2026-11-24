@@ -25,6 +25,7 @@ const facebookAuth = {
     'callbackURL': 'http://localhost:3000/auth/facebook/callback'
 };
 
+
 const mongourl = 'mongodb+srv://G56:aFu3BknvxYR8P1Kf@cluster0.cc1haok.mongodb.net/';
 const client = new MongoClient(mongourl, {
     serverApi: {
@@ -35,12 +36,14 @@ const client = new MongoClient(mongourl, {
 });
 const dbName = 'project_G56';
 const collectionName = "course";
+const userCollectionName = "users";
 
 async function connectDB() {
     await client.connect();
     console.log("MongoDB connected");
 }
 connectDB().catch(err => console.log("DB connect error:", err));
+
 
 passport.serializeUser(function(user, done) {
     done(null, user);
@@ -51,7 +54,7 @@ passport.deserializeUser(function(user, done) {
 
 passport.use(new FacebookStrategy(facebookAuth,
     function(accessToken, refreshToken, profile, done) {
-        console.log("Facebook data：", profile);
+        console.log("Facebook data:", profile);
         const fbUser = {
             id: profile.id,
             username: profile.displayName,
@@ -61,46 +64,25 @@ passport.use(new FacebookStrategy(facebookAuth,
     }
 ));
 function isLoggedIn(req, res, next) {
-    if (req.session?.user || req.isAuthenticated()) {
+    if (req.session && req.session.user) {
         return next();
     }
     res.redirect('/login');
 }
-function getUserInfo(req) {
-    if(req.session?.user) return req.session.user;
-    if(req.isAuthenticated()) return req.user;
-    return {username:"Guest"};
-}
 app.get('/login', (req, res) => {
     res.render('login');
+});
+app.get('/', (req, res) => {
+    res.redirect('/login');
 });
 
 app.get('/register', (req, res) => {
     res.render('register');
 });
-app.get('/', (req, res) => {
+app.get('/index', (req, res) => {
     res.redirect('/courses');
 });
-// 改咗呢度！唔再 render index.ejs，直接跳去 /courses
-app.get('/index', isLoggedIn, (req, res) => {
-    res.redirect('/courses');
-});
-
-app.get('/course', (req, res) => {
-    res.redirect('/courses/new');
-});
-app.get('/courses/:id/items/new', isLoggedIn, (req, res) => {
-    const course = demoCourses.find(c => String(c._id) === req.params.id);
-    if (!course) return res.status(404).send('cant find this course');
-    res.render('item-form', {
-        user: getUserInfo(req),
-        course,
-        item: null
-    });
-});
-
 const demoCourses = [];
-
 app.post('/courses', isLoggedIn, (req, res) => {
     const { code, name, academicYear, semester, category } = req.body;
 
@@ -114,7 +96,7 @@ app.post('/courses', isLoggedIn, (req, res) => {
         !['Major', 'Minor'].includes(category)
     ) {
         return res.status(400).render('course-form', {
-            user: getUserInfo(req),
+            user: { name: req.session.user.username },
             course: null,
             error: 'plz ender the info。'
         });
@@ -122,25 +104,28 @@ app.post('/courses', isLoggedIn, (req, res) => {
 
     demoCourses.push({
         _id: new ObjectId(),
+        owner: getCurrentUserKey(req),
         code: code.trim(),
         name: name.trim(),
         academicYear: academicYear.trim(),
         semester,
-        category,
-        items: []
+        category
     });
 
     return res.redirect(303, '/courses');
 });
 
 app.get('/courses', isLoggedIn, (req, res) => {
+    const currentUser = getCurrentUserKey(req);
+    const userCourses = demoCourses.filter(course => course.owner === currentUser);
+
     const filters = {
         academicYear: req.query.academicYear ?? '',
         semester: req.query.semester ?? '',
         category: req.query.category ?? ''
     };
 
-    const courses = demoCourses
+    const courses = userCourses
         .filter(course =>
             (!filters.academicYear || course.academicYear === filters.academicYear) &&
             (!filters.semester || course.semester === filters.semester) &&
@@ -152,8 +137,8 @@ app.get('/courses', isLoggedIn, (req, res) => {
         }));
 
     res.render('index', {
-        user: getUserInfo(req),
-        years: [...new Set(demoCourses.map(course => course.academicYear))].sort(),
+        user: { name: req.session.user.username },
+        years: [...new Set(userCourses.map(course => course.academicYear))].sort(),
         filters,
         courses
     });
@@ -161,33 +146,33 @@ app.get('/courses', isLoggedIn, (req, res) => {
 
 app.get('/courses/new', isLoggedIn, (req, res) => {
     res.render('course-form', {
-        user: getUserInfo(req),
+        user: { name: req.session.user.username },
         course: null,
         error: null
     });
 });
 
 app.get('/courses/:id/edit', isLoggedIn, (req, res) => {
+    const currentUser = getCurrentUserKey(req);
     const course = demoCourses.find(
-        row => String(row._id) === req.params.id
+        row => String(row._id) === req.params.id && row.owner === currentUser
     );
-
     if (!course) {
-        return res.status(404).send('找不到這門課程。');
+        return res.status(404).send('This course cannot be found.');
     }
 
     return res.render('course-form', {
-        user: getUserInfo(req),
+        user: { name: req.session.user.username },
         course,
         error: null
     });
 });
 
 app.post('/courses/:id/update', isLoggedIn, (req, res) => {
+    const currentUser = getCurrentUserKey(req);
     const course = demoCourses.find(
-        row => String(row._id) === req.params.id
+        row => String(row._id) === req.params.id && row.owner === currentUser
     );
-
     if (!course) {
         return res.status(404).send('cant find this couses');
     }
@@ -204,7 +189,7 @@ app.post('/courses/:id/update', isLoggedIn, (req, res) => {
         !['Major', 'Minor'].includes(category)
     ) {
         return res.status(400).render('course-form', {
-            user: getUserInfo(req),
+            user: { name: req.session.user.username },
             course,
             error: 'plz ender the coures info'
         });
@@ -222,16 +207,26 @@ app.post('/courses/:id/update', isLoggedIn, (req, res) => {
 });
 
 app.post('/courses/:id/delete', isLoggedIn, (req, res) => {
+    const currentUser = getCurrentUserKey(req);
     const index = demoCourses.findIndex(
-        row => String(row._id) === req.params.id
+        row => String(row._id) === req.params.id && row.owner === currentUser
     );
-
     if (index === -1) {
         return res.status(404).send('cant find this courses');
     }
-
     demoCourses.splice(index, 1);
     return res.redirect(303, '/courses');
+});
+
+app.get('/course', (req, res) => {
+    res.redirect('course-form');
+});
+
+app.get('/', (req, res) => {
+    res.redirect('item-form');
+});
+app.get('/register', (req, res) => {
+    res.render('register');
 });
 
 function calculateStats(items) {
@@ -247,13 +242,20 @@ function calculateStats(items) {
     };
 }
 
+function getCurrentUserKey(req) {
+    return req.session?.user?.username || '';
+}
+
 app.get('/courses/:id', isLoggedIn, (req, res) => {
-    const course = demoCourses.find(c => String(c._id) === req.params.id);
+    const currentUser = getCurrentUserKey(req);
+    const course = demoCourses.find(
+        c => String(c._id) === req.params.id && c.owner === currentUser
+    );;
     if (!course) return res.status(404).send('cant find this course');
 
     const items = course.items ?? [];
     return res.render('course', {
-        user: getUserInfo(req),
+        user: { name: req.session.user.username },
         course,
         stats: calculateStats(items),
         lectures: items.filter(item => item.kind === 'Lecture'),
@@ -315,7 +317,7 @@ app.get('/courses/:id/items/:itemId/edit', isLoggedIn, (req, res) => {
     }
 
     return res.render('item-form', {
-        user: getUserInfo(req),
+        user: { name: req.session.user.username },
         course,
         item
     });
@@ -387,6 +389,7 @@ app.post('/courses/:id/items/:itemId/delete', isLoggedIn, (req, res) => {
 });
 app.get("/auth/facebook", passport.authenticate("facebook", { scope: ["email"] }));
 
+
 app.get("/auth/facebook/callback",
     passport.authenticate("facebook", { failureRedirect: "/login" }),
     (req, res) => {
@@ -394,27 +397,73 @@ app.get("/auth/facebook/callback",
         res.redirect('/index');
     }
 );
+
+
+app.get('/index', isLoggedIn, (req, res) => {
+    res.render('index', { username: req.session.user.username });
+});
+
 app.post('/logout', (req, res) => {
-    req.session.destroy(()=>{
-        res.redirect('/login');
-    });
+    req.session.destroy();
+    res.redirect('/login');
 });
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     console.log("Received registration materials：", username, password);
-    res.redirect('/login');
+
+    try {
+        const db = client.db(dbName);
+        const usersCollection = db.collection(userCollectionName);
+
+        const existingUser = await usersCollection.findOne({ username: username });
+        if (existingUser) {
+            return res.render('register', { err: 'This account has already been registered, please use another account.' });
+        }
+
+        await usersCollection.insertOne({
+            username: username,
+            password: password
+        });
+
+        console.log("User saved to MongoDB:", username);
+        res.redirect('/login');
+    } catch (err) {
+        console.error("Register DB error:", err);
+        res.render('register', { err: 'A database error occurred during registration, please try again later.' });
+    }
 });
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log("Received login information：", username, password);
-    req.session.user = { username: username };
-    res.redirect('/index');
+    console.log("Received login information:", username, password);
+
+    try {
+        const db = client.db(dbName);
+        const usersCollection = db.collection(userCollectionName);
+
+        const user = await usersCollection.findOne({
+            username: username,
+            password: password
+        });
+
+        if (!user) {
+            return res.render('login', { err: 'The account or password is wrong!' });
+        }
+
+        req.session.user = {
+            id: user._id,
+            username: user.username
+        };
+        res.redirect('/index');
+    } catch (err) {
+        console.error("Login DB error:", err);
+        res.render('login', { err: 'A database error occurred while logging in, please try again later.' });
+    }
 });
 
 app.get('/home', isLoggedIn, (req, res) => {
-    res.send(`welcome ${getUserInfo(req).username}！<br><a href="/index">進入學習管理</a> <br><form action="/logout" method="POST"><button>logout</button></form>`);
+    res.send(`welcome ${req.session.user.username}！<br><a href="/index">Enter learning management</a> <br><form action="/logout" method="POST"><button>logout</button></form>`);
 });
 
 app.listen(port, () => {
